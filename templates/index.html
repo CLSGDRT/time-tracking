@@ -1,0 +1,29 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+  <h1>📊 TimeTrack - Welcome <span id="username"></span> 👋</h1>
+
+  <a href="javascript:void(0)" id="logout" class="btn btn-danger"
+    >Se déconnecter</a
+  >
+
+  <h3 class="mt-4">📌 Historique des sessions</h3>
+  <ul id="sessionList" class="list-group mb-4"></ul>
+
+  <h3>➕ Nouvelle session</h3>
+  <form id="sessionForm">
+    <input
+      type="text"
+      class="form-control mb-2"
+      id="activity"
+      placeholder="Activité" />
+    <input
+      type="number"
+      class="form-control mb-2"
+      id="duration"
+      placeholder="Durée (min)" />
+    <button class="btn btn-primary">Ajouter</button>
+  </form>
+</div>
+{% endblock %} {% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}

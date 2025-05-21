@@ -1,0 +1,23 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+  <h1>📊 TimeTrack</h1>
+
+  <h3 class="mt-4">🔒 On se connecte</h3>
+  <p>(login / password par défaut : mns)</p>
+  <form id="loginForm">
+    <input
+      type="text"
+      class="form-control mb-2"
+      id="username"
+      placeholder="Nom d'utilisateur" />
+    <input
+      type="password"
+      class="form-control mb-2"
+      id="password"
+      placeholder="Mot de passe" />
+    <button class="btn btn-primary">Se connecter</button>
+  </form>
+</div>
+{% endblock %} {% block scripts %}
+<script src="/static/js/login.js"></script>
+{% endblock %}
