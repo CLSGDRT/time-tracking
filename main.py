@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, render_template, request
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String
 from datetime import datetime, timezone
 
 app = Flask(__name__)
@@ -12,7 +11,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-class Activity:
+class Activity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     activity = db.Column(db.String(50), nullable=False)
     duration = db.Column(db.Integer, nullable=False)
