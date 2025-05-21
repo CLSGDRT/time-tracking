@@ -1,9 +1,22 @@
 from flask import Flask, jsonify, render_template, request
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 
 app.config["JWT_SECRET_KEY"] = "my-super-secret-key-de-mns"  # Dans un contexte de prod, vous ne feriez pas ça, évidemment. La clé doit être dans une variable d'environnement, sécurisée (on verra ça plus tard).
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////home/easyy/Developpement/Python/flask-orm-timetracking-CLSGDRT/database/timetrack.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
+
+class Activity:
+    id = db.Column(db.Integer, primary_key=True)
+    activity = db.Column(db.String(50), nullable=False)
+    duration = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 jwt = JWTManager(app)
 
@@ -35,10 +48,20 @@ def me():
 @app.route('/api/sessions', methods=['GET'])
 @jwt_required()
 def get_sessions():
-    return jsonify([
-        {"id": 1, "activity": "lecture", "duration": 45, "date": "2024-05-20T17:00"},
-        {"id": 2, "activity": "sport", "duration": 30, "date": "2024-05-19T18:00"}
-    ])
+    activities = db.session.query(Activity).all()
+    response = []
+    for activity in activities:
+        response.append({
+            "id": activity.id,
+            "activity": activity.activity,
+            "duration": activity.duration,
+            "date": activity.date.strftime("%Y-%m-%d %H:%M:%S")
+        })
+    return jsonify(response), 200
+    #     [
+    #     {"id": 1, "activity": "lecture", "duration": 45, "date": "2024-05-20T17:00"},
+    #     {"id": 2, "activity": "sport", "duration": 30, "date": "2024-05-19T18:00"}
+    # ])
 
 @app.route('/api/sessions', methods=['POST'])
 @jwt_required()
