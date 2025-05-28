@@ -1,12 +1,12 @@
 $(document).ready(function () {
-  fetchSessions();
-
   const token = localStorage.getItem("access_token");
 
   if (!token) {
     window.location.href = "/login";
     return;
   }
+
+  fetchSessions();
 
   $("#logout").on("click", function () {
     localStorage.removeItem("access_token");
@@ -54,15 +54,25 @@ $(document).ready(function () {
   });
 
   function fetchSessions() {
-    $.get("/api/sessions", function (data) {
-      $("#sessionList").empty();
-      data.forEach((session) => {
-        $("#sessionList").append(
-          `<li class="list-group-item">${session.activity} - ${
-            session.duration
-          } min le ${new Date(session.date).toLocaleString()}</li>`
-        );
-      });
+    $.ajax({
+      url: "/api/sessions",
+      method: "GET",
+      headers: { Authorization: "Bearer " + token },
+      success: function (data) {
+        $("#sessionList").empty();
+        data.forEach((session) => {
+          $("#sessionList").append(
+            `<li class="list-group-item">${session.activity} - ${
+              session.duration
+            } min le ${new Date(session.date).toLocaleString()}</li>`
+          );
+        });
+      },
+      error: function (err) {
+        if (err.status === 401) {
+          window.location.href = "/login";
+        }
+      },
     });
   }
 });

@@ -2,12 +2,14 @@ from flask import Flask, jsonify, render_template, request
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timezone
+from flask_cors import CORS
 
 app = Flask(__name__)
 
 app.config["JWT_SECRET_KEY"] = "my-super-secret-key-de-mns"  # Dans un contexte de prod, vous ne feriez pas ça, évidemment. La clé doit être dans une variable d'environnement, sécurisée (on verra ça plus tard).
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////home/easyy/Developpement/Python/flask-orm-timetracking-CLSGDRT/database/timetrack.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+CORS(app, origins="http://localhost:5001", supports_credentials=True, expose_headers=["Authorization"])
 
 db = SQLAlchemy(app)
 
@@ -54,7 +56,6 @@ def get_sessions():
             "id": activity.id,
             "activity": activity.activity,
             "duration": activity.duration,
-            "date": activity.date.strftime("%Y-%m-%d %H:%M:%S")
         })
     return jsonify(response), 200
     #     [
@@ -65,12 +66,44 @@ def get_sessions():
 @app.route('/api/sessions', methods=['POST'])
 @jwt_required()
 def add_session():
-    # ⚠️ Pensez à valider les données (que se passe-t-il si j'utilise une string dans la durée ?)
-    data = request.json
-    print(data) # 👈 Les données que vous recevez du frontend.
-    print(data.get("activity")) # 👈 Pour récupérer le nom de l'activité par exemple.
+    data = request.get_json()
 
-    return jsonify({"message": "Session enregistrée", "session": data}), 201
+    activity = data.get("activity")
+    duration = data.get("duration")
+    date_str = data.get("date")
+
+    # ✅ Vérification des champs
+    if not activity or not duration or not date_str:
+        return jsonify({"error": "Champs requis manquants"}), 400
+
+    try:
+        duration = int(duration)
+    except ValueError:
+        return jsonify({"error": "La durée doit être un entier"}), 400
+
+    try:
+        date = datetime.fromisoformat(date_str)
+    except ValueError:
+        return jsonify({"error": "Format de date invalide"}), 400
+
+    # 💾 Création de l'objet Activity
+    new_activity = Activity(
+        activity=activity,
+        duration=duration,
+        date=date  # 👈 le champ `date` est explicite ici
+    )
+
+    db.session.add(new_activity)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Session enregistrée",
+        "session": {
+            "id": new_activity.id,
+            "activity": new_activity.activity,
+            "duration": new_activity.duration,
+        }
+    }), 201
 
 @app.route('/api/activities', methods=['GET'])
 @jwt_required()
